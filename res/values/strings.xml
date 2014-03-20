@@ -5,4 +5,9 @@
     <string name="action_settings">Settings</string>
     <string name="hello_world">Hello world!</string>
 
+    <string name="ssid_ntu">ntu</string>
+    <string name="ssid_NTU">NTU</string>
+    
+    <string name="url_NTU">https://wl122.cc.ntu.edu.tw/auth/loginnw.html</string>
+    <string name="url_ntu">https://wl122.cc.ntu.edu.tw/auth/loginnw.html</string>
 </resources>

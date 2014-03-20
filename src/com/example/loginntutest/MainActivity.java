@@ -1,47 +1,114 @@
 package com.example.loginntutest;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.net.HttpURLConnection;
-import java.net.URL;
-
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLSession;
-
-import org.apache.http.client.HttpClient;
-import org.apache.http.entity.BufferedHttpEntity;
-
-import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
-import android.R.layout;
 import android.app.Activity;
-import android.util.Log;
-import android.view.Menu;
+import android.content.Context;
+import android.content.Intent;
+import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
+
+import com.example.loginntutest.MyAccountManager.AccountType;
 
 public class MainActivity extends Activity {
 
-	private TextView txtResult;
-	private Button btnConnect;
+	private TextView mTxtResult;
+	private Button mBtnConnect;
+	private Button mBtnSave;
+	private EditText mEditUsername;
+	private EditText mEditPassword;
+	
+	private Context mContext;
 	
 	public static final String NTUURL = "https://wl122.cc.ntu.edu.tw/auth/loginnw.html" ;
+	private MyAccountManager mAccountManager;
+	
+	
+	
+	
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_main);
+		
+		mContext = this;
+		findViews();
+		
+		
+		mAccountManager = new MyAccountManager(this);
+		final String username = mAccountManager.getUsername(AccountType.NTU);
+		final String password = mAccountManager.getPassword(AccountType.NTU);
+		mEditUsername.setText(username);
+		mEditPassword.setText(password);
+		
+		WifiReceiver.registerWifiReceiver(this);
+		
+		
+		mBtnConnect.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				
 
+        		Intent intentOut = new Intent();
+        		intentOut.setClass(mContext, WifiLoginService.class);
+        		intentOut.putExtra(WifiLoginService.SSID, getString(R.string.ssid_ntu));
+        		intentOut.putExtra(MyAccountManager.USERNAME, username);
+        		intentOut.putExtra(MyAccountManager.PASSWORD, password);
+        		mContext.startService(intentOut);
+				
+				
+				
+				/*toast("click");
+				
+				Thread thread = new Thread() {
+					@Override
+					public void run() {
+						connect();
+					}
+				};
+				thread.start();
+				//connect();*/
+			}
+		});
+		
+		mBtnSave.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				mAccountManager.saveAccount(mEditUsername.getText().toString(), mEditPassword.getText().toString(), AccountType.NTU);
+			}
+		});
+	
+	
+	}
+	
+	
+	private void findViews() {
+		mEditUsername = (EditText) findViewById(R.id.editName);
+		mEditPassword = (EditText) findViewById(R.id.editPwd);
+		mTxtResult = (TextView) findViewById(R.id.txtResult);
+		mBtnConnect = (Button) findViewById(R.id.btnConnect);
+		mBtnSave = (Button) findViewById(R.id.btnSave);
+		
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	/**
 	 * this lets the HttpsUrlConnection object bypass the verifier checking
 	 */
+	
+	/*
 	HostnameVerifier hostnameVerifier = new HostnameVerifier() {
 	    @Override
 	    public boolean verify(String hostname, SSLSession session) {
@@ -62,41 +129,8 @@ public class MainActivity extends Activity {
 			
 		}
 	};
-	
-	
-	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_main);
-		
-		txtResult = (TextView) findViewById(R.id.txtResult);
-		btnConnect = (Button) findViewById(R.id.btnConnect);
-		
-		btnConnect.setOnClickListener(new OnClickListener() {
-			
-			@Override
-			public void onClick(View v) {
-				toast("click");
-				
-				Thread thread = new Thread() {
-					@Override
-					public void run() {
-						connect();
-					}
-				};
-				thread.start();
-				//connect();
-			}
-		});
-	
-	}
 
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.main, menu);
-		return true;
-	}
+
 	
 	private void connect() {
 		
@@ -116,17 +150,17 @@ public class MainActivity extends Activity {
 
 			//toast("connected");
 			
-			/*
-			InputStream in = new BufferedInputStream(urlConnection.getInputStream());
-			try {
-				if (!url.getHost().equals(urlConnection.getURL().getHost())) {
-					// we were redirected! Kick the user out to the browser to sign on?
-					toast("!url.getHost().equals...");
-				}
-			} finally {
-				urlConnection.disconnect();
-			}
-			*/
+			
+			//InputStream in = new BufferedInputStream(urlConnection.getInputStream());
+			//try {
+			//	if (!url.getHost().equals(urlConnection.getURL().getHost())) {
+			//		// we were redirected! Kick the user out to the browser to sign on?
+			//		toast("!url.getHost().equals...");
+			//	}
+			//} finally {
+			//	urlConnection.disconnect();
+			//}
+			
 			
 			stringToHandlerMsgToast("hey").sendToTarget();
 			
@@ -149,9 +183,9 @@ public class MainActivity extends Activity {
 			
 			stringToHandlerMsgToast("finish reading, result: " + resultData).sendToTarget();
 			
-			/*if (!resultData.equals("")) {
-					txtResult.setText(resultData);
-			}*/
+			//if (!resultData.equals("")) {
+			//		txtResult.setText(resultData);
+			//}
 			reader.close();
 			urlConnection.disconnect();
 		}
@@ -189,4 +223,7 @@ public class MainActivity extends Activity {
 	public void toast(String text) {
 		Toast.makeText(getApplicationContext(), text, Toast.LENGTH_SHORT).show();
 	}
+	
+	*/
+	
 }
